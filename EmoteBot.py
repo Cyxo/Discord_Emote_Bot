@@ -86,6 +86,7 @@ class EmoteBot():
         async def add(ctx):
             pattern = "^[A-Za-z0-9_-]*$"
             words = ctx.message.content.split(' ')
+            await self.bot.delete_message(ctx.message)
             if len(words) != 3:
                 await self.bot.say("```Command <add takes 2 args : <add link emote_name```")
                 return
@@ -114,7 +115,6 @@ class EmoteBot():
                     await self.bot.say("```Your file type is : {}, please use {} files```".format(ftype[0], " ".join(self.suported_types)))
                     await self.process("rm -f emotes/{}.gif".format(words[2]))
                     return
-                await self.bot.delete_message(ctx.message)
                 await self.bot.say("```New emote : {} added!```".format(words[2]))
             except Exception as exception:
                 await self.bot.say("```The link doesn't work ;(```")
