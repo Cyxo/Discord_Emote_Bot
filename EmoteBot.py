@@ -18,12 +18,12 @@ class EmoteBot():
                                '<ping: return Pong!',
                                '<storage: print actual storage',
                                '<show_list: show emotes',
-                               '<emote nom_emote: post nom_emote',
+                               '<emote name_emote: post name_emote',
                                '<add link emote_name: add a New emote',
                                '<remove: remove an emote',
                                '<rename name_old_emote name_new_emote: rename an emote'
                               ]
-        self.suported_types = ["PNG", "GIF", "JPEG", "JPEG", "BMP", "SVG"]
+        self.suported_types = ["PNG", "GIF", "JPEG"]
         self.max_storage = 1000000
 
 
