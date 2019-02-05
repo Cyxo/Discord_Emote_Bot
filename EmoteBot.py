@@ -79,11 +79,6 @@ class EmoteBot():
             if not words[1]+'.gif' in test:
                 await self.bot.say("```Emote {} not found```".format(words[1]))
                 return
-
-            #embed = discord.Embed(title="Tile", description="Desc", color=0x00ff00)
-            #embed.add_field(value="", inline=True)
-            #await self.bot.send_message(ctx.message.channel, embed=embed)
-
             await self.bot.send_file(ctx.message.channel, "emotes/{}.gif".format(words[1]),filename="{}.gif".format(words[1]),content="{} :".format(ctx.message.author.mention))
 
 
