@@ -18,13 +18,14 @@ class EmoteBot():
                                '<ping: return Pong!',
                                '<storage: print actual storage',
                                '<show_list: show emotes',
-                               '<emote name_emote: post name_emote',
+                               '<emote nom_emote: post nom_emote',
                                '<add link emote_name: add a New emote',
                                '<remove: remove an emote',
                                '<rename name_old_emote name_new_emote: rename an emote'
                               ]
         self.suported_types = ["PNG", "GIF", "JPEG"]
         self.max_storage = 1000000
+        self.max_name_length = 20
 
 
     # console colors
@@ -79,7 +80,7 @@ class EmoteBot():
             if not words[1]+'.gif' in test:
                 await self.bot.say("```Emote {} not found```".format(words[1]))
                 return
-            await self.bot.send_file(ctx.message.channel, "emotes/{}.gif".format(words[1]),filename="{}.gif".format(words[1]),content="{} :".format(ctx.message.author.mention))
+            await self.bot.send_file(ctx.message.channel, "emotes/{}.gif".format(words[1]),filename="{}.gif".format(words[1]),content="{} reacted with {} :".format(ctx.message.author.mention, words[1]))
 
 
         @self.bot.command(pass_context = True)
@@ -96,6 +97,9 @@ class EmoteBot():
                 return
             if not re.match(pattern, words[2]):
                 await self.bot.say("```The name of your emote must comtain only alphanumeric characters, minus and underscores```")
+                return
+            if len(words[2]) > self.max_name_length:
+                await self.bot.say("```The name of your emote is too long, it must contain less than {} characters```".format(self.max_name_length))
                 return
             storage = await self.process("du -s emotes | cut -f1")
             if int(storage[0]) > self.max_storage:
