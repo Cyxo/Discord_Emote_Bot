@@ -1,13 +1,21 @@
 #! /usr/bin/python3
+
+import os
+
 import discord
-from discord.ext import commands
-from token_value import token
 import discord.utils
 import requests
 import re
 import shutil
-import os
-from config import config_prefix, config_suported_types, config_pattern, config_max_storage, config_max_name_length, config_message_by_line, config_max_message_length, config_max_emote_length, config_pong
+
+from discord.ext import commands
+from token_value import token
+
+from config import (config_prefix, config_suported_types, config_pattern, 
+                    config_max_storage, config_max_name_length, 
+                    config_message_by_line, config_max_message_length, 
+                    config_max_emote_length, config_pong)
+
 
 class EmoteBot():
     def __init__(self):
@@ -22,23 +30,13 @@ class EmoteBot():
         self.max_emote_length = config_max_emote_length
         self.pong = config_pong
 
-
-    # console colors
-    def red(self, msg): print('\033[91m[!] {}\033[00m' .format(msg))
-    def green(self, msg): print('\033[92m[+] {}\033[00m' .format(msg))
-    def yellow(self, msg): print('\033[93m[+] {}\033[00m' .format(msg))
-    def blue(self, msg): print('\033[94m[*] {}\033[00m' .format(msg))
-    def purple(self, msg): print('\033[95m[*] {}\033[00m' .format(msg))
-    def cyan(self, msg): print('\033[96m[*] {}\033[00m' .format(msg))
-
-    def show_attributes_from(self, object):
-        self.cyan('\n'.join(i for i in dir(object) if not i.startswith('__')))
+    def green(self, msg): print("\033[92m[+] {}\033[00m".format(msg))
 
     def catch(self):
 
         @self.bot.event
         async def on_ready():
-            self.green('EmoteBot is coming !')
+            self.green("EmoteBot is coming !")
 
         @self.bot.event                                                                  
         async def on_command_error(exc, ctx):                                           
@@ -58,7 +56,6 @@ class EmoteBot():
             """ Show the list of emotes """
             files = os.listdir("emotes")
             files.sort()
-
             odd = 0
             message = ""
             for i in range(len(files)):
@@ -66,14 +63,15 @@ class EmoteBot():
                 if odd%self.message_by_line == 0:
                     files[i] += "\n"
                 else:
-                    files[i] += " " * (self.max_name_length + 2 - len(files[i]))
+                    files[i] += " " * (self.max_name_length + 2 -
+                                       len(files[i]))
                 message += files[i]
                 odd += 1
-                if len(message) + (self.max_name_length) + 2 + 6 > self.max_message_length:
+                message_length = len(message) + (self.max_name_length) + 2 + 6
+                if message_length > self.max_message_length:
                     await self.bot.say("```{}```".format(message))
                     message = ""
                     odd = 0
-
             if message != "":
                 await self.bot.say("```{}```".format(message))
 
@@ -86,10 +84,14 @@ class EmoteBot():
                 None
             name = name.lower()
             test = os.listdir("emotes")
-            if not name +'.gif' in test:
+            if not name +".gif" in test:
                 await self.bot.say("```Emote {} not found```".format(name))
                 return
-            await self.bot.send_file(ctx.message.channel, "emotes/{}.gif".format(name),filename="{}.gif".format(name),content="{} reacted with {} :".format(ctx.message.author.mention, name))
+            await self.bot.send_file(ctx.message.channel, 
+                                     "emotes/{}.gif".format(name),
+                                     filename="{}.gif".format(name),
+                                     content="{} reacted with {} :"
+                                     .format(ctx.message.author.mention, name))
 
 
         @self.bot.command(pass_context = True)
@@ -101,21 +103,26 @@ class EmoteBot():
                 None
             name = name.lower()
             test = os.listdir("emotes")
-            if name+'.gif' in test:
+            if name+".gif" in test:
                 await self.bot.say("```This name is already on an emote```")
                 return
             if not re.match(self.pattern, name):
-                await self.bot.say("```The name of your emote must contain only alphanumeric characters and underscores```")
+                await self.bot.say("```The name of your emote must contain "
+                                   "only alphanumeric characters and "
+                                   "underscores```")
                 return
             if len(name) > self.max_name_length:
-                await self.bot.say("```The name of your emote is too long, it must contain less than {} characters```".format(self.max_name_length))
+                await self.bot.say("```The name of your emote is too long, "
+                                   "it must contain less than {} characters```"
+                                   "".format(self.max_name_length))
                 return
             storage = 0
             for files in os.scandir("emotes"):
                 if not ( files.name.startswith(".") ):
                     storage += os.path.getsize("emotes/{}".format(files.name))
             if storage > self.max_storage:
-                await self.bot.say("```There in no place anymore, please remove emotes```")
+                await self.bot.say("```There in no place anymore, please "
+                                   "remove emotes```")
                 return
             try:
                 r = requests.head(link)
@@ -126,13 +133,17 @@ class EmoteBot():
                 await self.bot.say("```The link doesn't respond ;(```")
                 return
             if not ( "image" in r.headers["Content-Type"] ):
-                await self.bot.say("```Your content type is {}, please use images```".format(r.headers["Content-Type"]))
+                await self.bot.say("```Your content type is {}, please use "
+                                   "images```"
+                                   "".format(r.headers["Content-Type"]))
                 return
             if int(r.headers["Content-Length"]) > self.max_emote_length:
-                await self.bot.say("```Your file is too heavy, max weight is : {}Mo```".format(self.max_emote_length//(int(1E6))))
+                await self.bot.say("```Your file is too heavy, "
+                                   "max weight is : {}Mo```"
+                                   "".format(self.max_emote_length//(int(1E6))))
                 return
             filename = "emotes/{}.gif".format(name)
-            with open(filename, 'wb') as f:
+            with open(filename, "wb") as f:
                 f.write(requests.get(link).content)
             await self.bot.say("```New emote : {} added!```".format(name))
 
@@ -141,7 +152,7 @@ class EmoteBot():
             """ Remove an emote of the database """
             name = name.lower()
             test = os.listdir("emotes")
-            if not name+'.gif' in test:
+            if not name+".gif" in test:
                 await self.bot.say("```Emote not found```")
                 return
             os.remove("emotes/{}.gif".format(name))
@@ -153,17 +164,22 @@ class EmoteBot():
             old = name.lower()
             new = new.lower()
             test = os.listdir("emotes")
-            if not old+'.gif' in test:
+            if not old+".gif" in test:
                 await self.bot.say("```Emote not found```")
                 return
             if not re.match(self.pattern, new):
-                await self.bot.say("```The name of your emote must comtain only alphanumeric characters and underscores```")
+                await self.bot.say("```The name of your emote must comtain "
+                                   "only alphanumeric characters and "
+                                   "underscores```")
                 return
             if len(new) > self.max_name_length:
-                await self.bot.say("```The name of your emote is too long, it must contain less than {} characters```".format(self.max_name_length))
+                await self.bot.say("```The name of your emote is too long, "
+                                   "it must contain less than {} characters```"
+                                   "".format(self.max_name_length))
                 return
             os.rename("emotes/{}.gif".format(old), "emotes/{}.gif".format(new))
-            await self.bot.say("```Emote : {} successfully renamed in {}```".format(old, new))
+            await self.bot.say("```Emote : {} successfully renamed in {}```"
+                               "".format(old, new))
 
         @self.bot.command()
         async def storage():
@@ -172,8 +188,9 @@ class EmoteBot():
             for files in os.scandir("emotes"):
                 if not ( files.name.startswith(".") ):
                     storage += os.path.getsize("emotes/{}".format(files.name))
-            await self.bot.say("```There is a storage of {}Mo / {}Mo```".format(storage//int(1E6), self.max_storage//(int(1E6))))
-
+            await self.bot.say("```There is a storage of {}Mo / {}Mo```"
+                               "".format(storage//int(1E6), 
+                                       self.max_storage//(int(1E6))))
 
     def start(self):
         self.catch()
