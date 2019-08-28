@@ -1,16 +1,16 @@
 # Discord_Emote_Bot
 
-This is a bot for Discord which allows users tu deal with the server where the bot runs.
+This is a bot for Discord which allows users to deal with the server where the bot runs.
 
 ## Commands list :
 
-<commands: show the commands list.
+<help: print the helping message
 
 <ping: return Pong!
 
-<storage: print storage of the emotes/ repository
+<storage: print storage of the emotes repository
 
-<show_list: show the content of emotes/ repository
+<show_list: show the content of emotes repository
 
 <emote name_emote: post name_emote
 
