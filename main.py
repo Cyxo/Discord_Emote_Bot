@@ -38,24 +38,23 @@ class EmoteBot():
             self.green("EmoteBot is coming !")
 
         @self.bot.event
-        async def on_command_error(exc, ctx):
+        async def on_command_error(ctx, exc):
             command = ctx.message.content[1:].split(" ")[0]
-            if command not in self.bot.commands:
+            if command not in self.bot.all_commands:
                 return
             ctx.message.content = self.prefix + "help " + command
             await self.bot.process_commands(ctx.message)
 
         @self.bot.command()
-        async def ping():
+        async def ping(ctx):
             """ Ping da bot """
-            await self.bot.say("```{}```".format(self.pong))
+            await ctx.send("```{}```".format(self.pong))
 
         @self.bot.command()
-        async def show_list():
+        async def show_list(ctx):
             """ Show the list of emotes """
-            files = os.listdir("emotes")
-            files.sort()
-            odd = 0
+            files = sorted(os.listdir("emotes"))
+            odd = 1
             message = ""
             for i in range(len(files)):
                 files[i] = files[i][:-4]
@@ -68,128 +67,129 @@ class EmoteBot():
                 odd += 1
                 message_length = len(message) + (self.max_name_length) + 2 + 6
                 if message_length > self.max_message_length:
-                    await self.bot.say("```{}```".format(message))
+                    await ctx.send("```{}```".format(message))
                     message = ""
                     odd = 0
             if message != "":
-                await self.bot.say("```{}```".format(message))
+                await ctx.send("```\n{}```".format(message))
 
-        @self.bot.command(pass_context=True)
+        @self.bot.command()
         async def emote(ctx, name):
             """ Send the gif which you specify """
             try:
-                await self.bot.delete_message(ctx.message)
+                await ctx.message.delete()
             except discord.Forbidden:
                 None
             name = name.lower()
             test = os.listdir("emotes")
             if not name + ".gif" in test:
-                await self.bot.say("```Emote {} not found```".format(name))
+                await ctx.send("```Emote {} not found```".format(name))
                 return
-            await self.bot.send_file(ctx.message.channel,
-                                     "emotes/{}.gif".format(name),
-                                     filename="{}.gif".format(name),
-                                     content="{} reacted with {} :"
-                                     .format(ctx.message.author.mention, name))
+            await ctx.send(file=discord.File("emotes/{}.gif".format(name)),
+                           content="{} reacted with {} :"
+                           .format(ctx.message.author.mention, name))
 
-        @self.bot.command(pass_context=True)
+        @self.bot.command()
         async def add(ctx, link, name):
             """ Add an emote to the database """
             try:
-                await self.bot.delete_message(ctx.message)
+                await ctx.message.delete()
             except discord.Forbidden:
                 None
             name = name.lower()
             test = os.listdir("emotes")
             if name+".gif" in test:
-                await self.bot.say("```This name is already on an emote```")
+                await ctx.send("```This name is already on an emote```")
                 return
             if not re.match(self.pattern, name):
-                await self.bot.say("```The name of your emote must contain "
-                                   "only alphanumeric characters and "
-                                   "underscores```")
+                await ctx.send("```The name of your emote must contain "
+                               "only alphanumeric characters and "
+                               "underscores```")
                 return
             if len(name) > self.max_name_length:
-                await self.bot.say("```The name of your emote is too long, "
-                                   "it must contain less than {} characters```"
-                                   "".format(self.max_name_length))
+                await ctx.send("```The name of your emote is too long, "
+                               "it must contain less than {} characters```"
+                               "".format(self.max_name_length))
                 return
             storage = 0
             for files in os.scandir("emotes"):
                 if not (files.name.startswith(".")):
                     storage += os.path.getsize("emotes/{}".format(files.name))
             if storage > self.max_storage:
-                await self.bot.say("```There in no place anymore, please "
-                                   "remove emotes```")
+                await ctx.send("```There in no place anymore, please "
+                               "remove emotes```")
                 return
             try:
                 r = requests.head(link)
             except requests.exceptions.MissingSchema:
-                await self.bot.say("```The link doesn't work ;(```")
+                await ctx.send("```The link doesn't work ;(```")
                 return
             if r.status_code != 200:
-                await self.bot.say("```The link doesn't respond ;(```")
+                await ctx.send("```The link doesn't respond ;(```")
                 return
             if not ("image" in r.headers["Content-Type"]):
-                await self.bot.say("```Your content type is {}, please use "
-                                   "images```"
-                                   "".format(r.headers["Content-Type"]))
+                await ctx.send("```Your content type is {}, please use "
+                               "images```"
+                               "".format(r.headers["Content-Type"]))
                 return
             if int(r.headers["Content-Length"]) > self.max_emote_length:
-                await self.bot.say("```Your file is too heavy, "
-                                   "max weight is : {}Mo```"
-                                   "".format(self.
-                                             max_emote_length//(int(1E6))))
+                await ctx.send("```Your file is too heavy, "
+                               "max weight is : {}Mo```"
+                               "".format(self.
+                                         max_emote_length//(int(1E6))))
                 return
             filename = "emotes/{}.gif".format(name)
             with open(filename, "wb") as f:
                 f.write(requests.get(link).content)
-            await self.bot.say("```New emote : {} added!```".format(name))
+            await ctx.send("```New emote : {} added!```".format(name))
 
-        @self.bot.command(pass_context=True)
+        @self.bot.command()
         async def remove(ctx, name):
             """ Remove an emote of the database """
             name = name.lower()
             test = os.listdir("emotes")
             if name+".gif" not in test:
-                await self.bot.say("```Emote not found```")
+                await ctx.send("```Emote not found```")
                 return
             os.remove("emotes/{}.gif".format(name))
-            await self.bot.say("```Emote : {} removed```".format(name))
+            await ctx.send("```Emote : {} removed```".format(name))
 
-        @self.bot.command(pass_context=True)
+        @self.bot.command()
         async def rename(ctx, old, new):
             """ Rename an emote """
             old = old.lower()
             new = new.lower()
             test = os.listdir("emotes")
-            if old+".gif" not in test:
-                await self.bot.say("```Emote not found```")
+            if old + ".gif" not in test:
+                await ctx.send("```Emote not found```")
+                return
+            if new + ".gif" in test:
+                await ctx.send("```Emote already exist```")
                 return
             if not re.match(self.pattern, new):
-                await self.bot.say("```The name of your emote must comtain "
-                                   "only alphanumeric characters and "
-                                   "underscores```")
+                await ctx.send("```The name of your emote must comtain "
+                               "only alphanumeric characters and "
+                               "underscores```")
                 return
             if len(new) > self.max_name_length:
-                await self.bot.say("```The name of your emote is too long, "
-                                   "it must contain less than {} characters```"
-                                   "".format(self.max_name_length))
+                await ctx.send("```The name of your emote is too long, "
+                               "it must contain less than {} characters```"
+                               "".format(self.max_name_length))
                 return
             os.rename("emotes/{}.gif".format(old), "emotes/{}.gif".format(new))
-            await self.bot.say("```Emote : {} successfully renamed in {}```"
-                               "".format(old, new))
+            await ctx.send("```Emote : {} successfully renamed in {}```"
+                           "".format(old, new))
 
         @self.bot.command()
-        async def storage():
+        async def storage(ctx):
             """ Display the remaining storage """
             storage = 0
             for files in os.scandir("emotes"):
                 if not (files.name.startswith(".")):
                     storage += os.path.getsize("emotes/{}".format(files.name))
-            await self.bot.say("```There is a storage of {}Mo / {}Mo```"
-                               "".format(storage//int(1E6),
-                                         self.max_storage//(int(1E6))))
+            await ctx.send("```There is a storage of {}Mo / {}Mo```"
+                           "".format(storage//int(1E6),
+                                     self.max_storage//(int(1E6))))
 
     def start(self):
         self.catch()
