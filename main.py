@@ -50,7 +50,7 @@ class EmoteBot():
             """ Ping da bot """
             await ctx.send("```{}```".format(self.pong))
 
-        @self.bot.command()
+        @self.bot.command(aliases = ['list'])
         async def show_list(ctx):
             """ Show the list of emotes """
             files = sorted(os.listdir("emotes"))
