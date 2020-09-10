@@ -39,11 +39,29 @@ class EmoteBot():
 
         @self.bot.event
         async def on_command_error(ctx, exc):
-            command = ctx.message.content[1:].split(" ")[0]
-            if command not in self.bot.all_commands:
+            # Detect mentions
+            if re.match(r"<@!?\d{18}>", ctx.message.content):
                 return
-            ctx.message.content = self.prefix + "help " + command
-            await self.bot.process_commands(ctx.message)
+            try:
+                await ctx.message.delete()
+            except discord.Forbidden:
+                None
+
+            command = ctx.message.content[1:].split(" ")[0]
+            if command in self.bot.all_commands:
+                ctx.message.content = self.prefix + "help " + command
+                await self.bot.process_commands(ctx.message)
+                return
+            test = os.listdir("emotes")
+            if command + ".gif" in test:
+                await ctx.send(file=discord.File("emotes/{}.gif".format(command)),
+                             content="{} reacted with {} :"
+                             .format(ctx.message.author.mention, command))
+                return
+
+            # Display an error message if the command is not found, because
+            # we still delete their message
+            await ctx.send(f'```Command or emote "{command}" not found```')
 
         @self.bot.command()
         async def ping(ctx):
